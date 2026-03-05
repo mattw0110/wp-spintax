@@ -23,38 +23,17 @@ if (!class_exists('Spintax_Public')) {
 			// Scripts are no longer needed
 		}
 
-		private function is_builder_context()
-		{
-			global $post;
-
-			if (isset($_GET['bricks']) && $_GET['bricks'] === 'builder') {
-				return true;
-			}
-
-			if (function_exists('Elementor\Plugin') && \Elementor\Plugin::$instance->preview->is_preview_mode() && \Elementor\Plugin::$instance->db->is_built_with_elementor($post->ID)) {
-				return true;
-			}
-			if (function_exists('Elementor\Plugin') && \Elementor\Plugin::$instance->preview->is_edit_mode() && \Elementor\Plugin::$instance->db->is_built_with_elementor($post->ID)) {
-				return true;
-			}
-
-			if (is_admin() && function_exists('get_current_screen')) {
-				$screen = get_current_screen();
-				if ($screen && $screen->is_block_editor) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
+		/**
+		 * Start output buffering on frontend pages only.
+		 * Skips all builder editors, AJAX, REST API, and non-frontend contexts.
+		 */
 		public function start_output_buffering()
 		{
 			// Skip admin pages
 			if (is_admin())
 				return;
 
-			// Skip AJAX requests (admin-ajax.php)
+			// Skip AJAX requests
 			if (defined('DOING_AJAX') && DOING_AJAX)
 				return;
 			if (function_exists('wp_doing_ajax') && wp_doing_ajax())
@@ -77,21 +56,24 @@ if (!class_exists('Spintax_Public')) {
 				return;
 
 			// Skip WordPress Customizer preview
-			if (is_customize_preview())
+			if (function_exists('is_customize_preview') && is_customize_preview())
 				return;
 
-			// Skip Bricks Builder contexts
-			if (isset($_GET['bricks']) && $_GET['bricks'] === 'builder')
+			// Skip Bricks Builder — ANY request with a 'bricks' query parameter
+			// Bricks uses ?bricks=run for the editor iframe, ?bricks=builder, etc.
+			if (isset($_GET['bricks']))
 				return;
+
+			// Skip Bricks AJAX render calls
 			if (function_exists('bricks_is_ajax_call') && bricks_is_ajax_call())
 				return;
-			if (defined('BRICKS_DB_PAGE_HEADER') || defined('BRICKS_DB_PAGE_FOOTER')) {
-				if (isset($_REQUEST['action']) && strpos($_REQUEST['action'], 'bricks') !== false)
-					return;
-			}
+			if (isset($_REQUEST['action']) && strpos($_REQUEST['action'], 'bricks') !== false)
+				return;
 
 			// Skip Elementor contexts
-			if (isset($_GET['elementor-preview']) || isset($_GET['action']) && $_GET['action'] === 'elementor')
+			if (isset($_GET['elementor-preview']))
+				return;
+			if (isset($_GET['action']) && $_GET['action'] === 'elementor')
 				return;
 			if (class_exists('\\Elementor\\Plugin')) {
 				$elementor = \Elementor\Plugin::$instance;
@@ -104,6 +86,12 @@ if (!class_exists('Spintax_Public')) {
 			ob_start(array($this, 'process_spintax'));
 		}
 
+		/**
+		 * Process spintax patterns in the buffered output.
+		 *
+		 * @param string $buffer The full HTML output.
+		 * @return string The processed output with spintax replaced.
+		 */
 		public function process_spintax($buffer)
 		{
 			// Only process HTML responses — skip JSON, XML, etc.
@@ -117,7 +105,7 @@ if (!class_exists('Spintax_Public')) {
 				return $buffer;
 			}
 
-			// Process {word1|word2} — requires at least one pipe to avoid matching JSON/CSS/JS
+			// Process {word1|word2} — requires at least one pipe to avoid matching CSS/JS/JSON
 			$buffer = preg_replace_callback('/\{([^{}|]+(?:\|[^{}|]+)+)\}/', function ($matches) {
 				$words = explode('|', $matches[1]);
 				return $words[array_rand($words)];

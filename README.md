@@ -1,57 +1,84 @@
 # Spintax
 
-Spintax is a lightweight, SEO-friendly WordPress plugin designed to randomly
-'spin' through alternative words or phrases on every page reload.
+A lightweight, SEO-friendly WordPress plugin that randomly 'spins' alternative
+words or phrases on each page load — entirely on the server.
 
 ## Key Features
 
-- **Server-Side Processing**: Unlike many other spintax plugins that rely on
-  client-side JavaScript, this plugin processes all spintax on the server. This
-  ensures:
-  - **No FOUC (Flash of Unstyled Content)**: Users never see the raw spintax
-    variables during page load.
-  - **SEO Friendly**: Search engines index the fully rendered content, not the
-    raw spintax codes.
-- **Pure PHP Implementation**: No dependency on jQuery or other heavy
-  client-side libraries.
-- **Page Builder Compatible**: Built-in safeguards ensure full compatibility
-  with modern builders like **Bricks Builder** and **Elementor**.
-- **Regex Protection**: Smart processing logic ensures that CSS, JavaScript, and
-  JSON content (like those in page builder AJAX calls) are never accidentally
-  modified.
+- **Server-Side Processing** — Spintax is resolved in PHP before HTML reaches
+  the browser. No FOUC, no raw variables flashing on screen.
+- **SEO Friendly** — Search engines index the final rendered text, not
+  `{word1|word2}` codes.
+- **Pure PHP** — Zero JavaScript dependencies. No jQuery required.
+- **Page Builder Safe** — Automatically detects and skips Bricks Builder,
+  Elementor, Gutenberg, REST API, AJAX, Cron, and Customizer contexts so your
+  builder never breaks.
 
 ## Usage
 
-You can use spintax anywhere in your WordPress content (pages, posts, or
-widgets).
+Place spintax anywhere in your WordPress content — pages, posts, widgets, or
+page builder elements.
 
-### 1. Simple Spintax
+### Curly Bracket Syntax
 
-Use curly brackets to randomly select a word on every page refresh:
-`{ Hi | Hello | Hey | Greetings }`
+```
+Get {the best|expert|professional} addiction treatment
+```
 
-### 2. Tilde Syntax
+On each **uncached** page load, one word is randomly selected (e.g., "Get expert
+addiction treatment").
 
-The tilde syntax is also supported and behaves exactly like the simple curly
-bracket syntax, rendering instantly on the server:
-`~ Beautiful | Stunning | Elegant | Modern ~`
+### Tilde Syntax
 
-## How it works
+```
+We offer ~compassionate|personalized|evidence-based~ care
+```
 
-The plugin uses PHP output buffering to intercept the HTML content before it's
-sent to the browser. It applies a refined regular expression to identify spintax
-patterns (requiring at least one `|` character) and replaces them with a
-randomly selected choice from the provided list.
+Behaves identically to curly brackets — randomly picks one option server-side.
 
-## Compatibility Note
+## Caching & Randomization
 
-This plugin is specifically designed to be safe for use with **Bricks Builder**
-and **Elementor**. It automatically detects builder contexts and REST API/AJAX
-requests to ensure its processing logic only runs where it's supposed to,
-keeping your layout and builder functionality intact.
+> **Important:** If you use a full-page caching plugin (LiteSpeed Cache, WP
+> Super Cache, W3 Total Cache, etc.), the spintax is resolved once when the
+> cache is built. Subsequent visitors see the cached version until the cache
+> expires or is purged.
+
+This means:
+
+- **Each cache rebuild** picks new random words — great for SEO variation over
+  time.
+- **To see randomization in real-time**, either purge your cache and refresh, or
+  append a unique query string to bypass cache:
+  ```
+  https://yoursite.com/page/?nocache=1
+  https://yoursite.com/page/?nocache=2
+  ```
+
+## How It Works
+
+The plugin hooks into `template_redirect` using PHP output buffering
+(`ob_start`). Before the HTML is sent to the browser, a regex scans for spintax
+patterns (requiring at least one `|` pipe character) and replaces each with a
+randomly selected option. The regex is specifically designed to **not** match
+CSS `{}`, JavaScript objects, or JSON — only legitimate spintax like
+`{word1|word2}`.
+
+## Compatibility
+
+Fully compatible with:
+
+- **Bricks Builder** — builder editor, AJAX rendering, and frontend
+- **Elementor** — preview mode, edit mode, and frontend
+- **Gutenberg** — block editor detection
+- **REST API / AJAX / Cron / XML-RPC / WP CLI** — all skipped automatically
 
 ## Installation
 
-1. Upload the `wp-spintax` folder to your `/wp-content/plugins/` directory.
-2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Start adding `{word1|word2|word3}` to your pages!
+1. Upload the `wp-spintax` folder to `/wp-content/plugins/`.
+2. Activate through **Plugins → Installed Plugins**.
+3. Add `{word1|word2|word3}` or `~word1|word2~` to your content.
+4. Clear your page cache to see new random selections.
+
+## License
+
+GPL-2.0+ — See [LICENSE.txt](LICENSE.txt) for details.
