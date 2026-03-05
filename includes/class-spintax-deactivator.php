@@ -20,17 +20,22 @@
  * @subpackage Spintax/includes
  * @author     Baber Parweez <baberparweez@gmail.com>
  */
-class Spintax_Deactivator {
+if (!class_exists('Spintax_Deactivator')) {
+	class Spintax_Deactivator
+	{
 
-	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
-	 *
-	 * @since    1.0.0
-	 */
-	public static function deactivate() {
+		/**
+		 * Short Description. (use period)
+		 *
+		 * Long Description.
+		 *
+		 * @since    1.0.0
+		 */
+		public static function deactivate()
+		{
+
+		}
 
 	}
 
-}
+} // end class_exists guard

@@ -20,17 +20,22 @@
  * @subpackage Spintax/includes
  * @author     Baber Parweez <baberparweez@gmail.com>
  */
-class Spintax_Activator {
+if (!class_exists('Spintax_Activator')) {
+	class Spintax_Activator
+	{
 
-	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
-	 *
-	 * @since    1.0.0
-	 */
-	public static function activate() {
+		/**
+		 * Short Description. (use period)
+		 *
+		 * Long Description.
+		 *
+		 * @since    1.0.0
+		 */
+		public static function activate()
+		{
+
+		}
 
 	}
 
-}
+} // end class_exists guard
